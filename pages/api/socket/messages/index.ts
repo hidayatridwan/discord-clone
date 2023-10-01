@@ -1,28 +1,37 @@
+import { NextApiRequest } from "next";
+
+import { NextApiResponseServerIo } from "@/type";
 import { currentProfilePages } from "@/lib/current-profile-pages";
 import { db } from "@/lib/db";
-import { NextApiResponseServerIo } from "@/type";
-import { NextApiRequest } from "next";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponseServerIo
 ) {
-  if (req.method !== "POST")
+  if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
 
   try {
     const profile = await currentProfilePages(req);
-    if (!profile) return res.status(401).json({ error: "Unauthorized" });
-
-    const { serverId, channelId } = req.query;
-    if (!serverId)
-      return res.status(400).json({ error: "Server ID is Missing" });
-
-    if (!channelId)
-      return res.status(400).json({ error: "Channel ID is Missing" });
-
     const { content, fileUrl } = req.body;
-    if (!content) return res.status(400).json({ error: "Content is Missing" });
+    const { serverId, channelId } = req.query;
+
+    if (!profile) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!serverId) {
+      return res.status(400).json({ error: "Server ID missing" });
+    }
+
+    if (!channelId) {
+      return res.status(400).json({ error: "Channel ID missing" });
+    }
+
+    if (!content) {
+      return res.status(400).json({ error: "Content missing" });
+    }
 
     const server = await db.server.findFirst({
       where: {
@@ -38,7 +47,9 @@ export default async function handler(
       },
     });
 
-    if (!server) return res.status(404).json({ error: "Server not found" });
+    if (!server) {
+      return res.status(404).json({ message: "Server not found" });
+    }
 
     const channel = await db.channel.findFirst({
       where: {
@@ -47,12 +58,17 @@ export default async function handler(
       },
     });
 
-    if (!channel) return res.status(404).json({ error: "Channel not found" });
+    if (!channel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
 
     const member = server.members.find(
       (member) => member.profileId === profile.id
     );
-    if (!member) return res.status(404).json({ error: "Member not found" });
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
 
     const message = await db.message.create({
       data: {
@@ -77,6 +93,6 @@ export default async function handler(
     return res.status(200).json(message);
   } catch (error) {
     console.log("[MESSAGES_POST]", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal Error" });
   }
 }

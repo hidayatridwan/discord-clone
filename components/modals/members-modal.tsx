@@ -10,7 +10,7 @@ import {
 import { useModal } from "@/hooks/use-modal-store";
 import { ServerWithMembersWithProfiles } from "@/type";
 import { ScrollArea } from "../ui/scroll-area";
-import UserAvatar from "../user-avatar";
+import { UserAvatar } from "../user-avatar";
 import {
   Check,
   Gavel,
